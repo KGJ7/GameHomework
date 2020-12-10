@@ -200,14 +200,11 @@ public class Main {
             case ('w'):
                 heavyAttack();
                 break;
-            case ('y'):
-                yesOrNo = true;
-                break;
-            case ('n'):
-                yesOrNo = false;
-                break;
             case ('e'):
                 stunAttack();
+                break;
+            case (' '):
+                System.out.println("Try again.");
                 break;
             default:
                 System.out.println("Invalid Input!!");
@@ -308,7 +305,7 @@ public class Main {
             enemyAlive = false;
             baseEnemyDamage = 0;
         } else {
-            baseEnemyDamage = 4;
+            baseEnemyDamage = 0;
         }
         int damageDealt = multiplier * baseEnemyDamage;
         playerHp = playerHp - damageDealt;
@@ -319,15 +316,13 @@ public class Main {
     public static int getPlayerDamageDealt() {
         if (lightAttack) {
             playerDamageDealt = randint.nextInt(3) + baseDamage;
-            return playerDamageDealt;
         } else if (!lightAttack) {
             playerDamageDealt = randint.nextInt(4) + (baseDamage * 2);
-            return playerDamageDealt;
         } else {
             System.out.println("ERROR");
         }
         getEnemyDamageTaken();
-        return 0;
+        return playerDamageDealt;
     }
 
     public static void getEnemyDamageTaken() {
@@ -373,7 +368,7 @@ public class Main {
         keyLog.clear();
         enemyStunned = false;
         while (fightingPhase) {
-            if (playerHp > 0) {
+            if ((playerHp > 0) && (enemyHp > 1)) {
                 getUserInput();
                 System.out.println("The " + enemyName + " has " + enemyHp + " health remaining!");
                 playerTurn = playerTurn + 1;
@@ -386,19 +381,26 @@ public class Main {
                     enemyTurn = enemyTurn + 1;
                     enemyStunned = false;
                 }
-            } else {
-                endGame();
+            } else if (playerHp < 1){
+                playerDeath();
                 break;
+            } else if (enemyHp < 1){
+
             }
         }
     }
-    public static void endGame(){
+    public static void playerDeath(){
         System.out.println("死\nYOU ARE DEAD.");
     }
+    public static void enemyDeath(){
+        System.out.println("You stand over the dead carcass of the " + enemyName + ", savouring your victory.");
+    }
     public static void main(String[] args) {
-            runGame();
+        runGame();
         }
-            }
+        }
+
+
 
 
 
