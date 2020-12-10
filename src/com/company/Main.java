@@ -1,11 +1,14 @@
 package com.company;
 
+import com.sun.scenario.effect.impl.sw.sse.SSEBlend_SRC_OUTPeer;
+
+import java.sql.Time;
+import java.time.*;
 import java.util.*;
 import java.io.*;
 import java.util.concurrent.*;
 import java.time.temporal.*;
 public class Main {
-
 
     public static int playerHp = 100;
     public static int enemyHp;
@@ -19,8 +22,6 @@ public class Main {
     public static int enemyTurn;
     public static LocalDateTime previousStunTime = LocalDateTime.now();
     public static String enemyName;
-    public static String enemyVariety;
-    public static String weaponEquipped;
     public static String[] inventory = new String[5];
     public static Scanner scan = new Scanner(System.in);
     public static Random randint = new Random();
@@ -35,6 +36,13 @@ public class Main {
     public static boolean enemyAlive;
     public static boolean lightAttack;
     public static boolean tutorialActive = true;
+    public static boolean fightingPhase;
+    public static boolean yesOrNo;
+    public static boolean fightAvoidable;
+    public static boolean playerStunned;
+    public static boolean enemyStunned;
+    public static boolean stunCooldownActive = false;
+
 
     public static void runGame() {
         openingStory();
@@ -123,7 +131,7 @@ public class Main {
     }
 
     public static void heavyAttack() {
-        if (tutorialActive){
+        if (tutorialActive) {
             tutorialProgress = tutorialProgress + 1;
         }
         try {
@@ -192,6 +200,12 @@ public class Main {
             case ('w'):
                 heavyAttack();
                 break;
+            case ('y'):
+                yesOrNo = true;
+                break;
+            case ('n'):
+                yesOrNo = false;
+                break;
             case ('e'):
                 stunAttack();
                 break;
@@ -200,6 +214,40 @@ public class Main {
                 break;
         }
     }
+
+    public static void choiceTutorial() {
+        try {
+            TimeUnit.SECONDS.sleep(2);
+            System.out.println("This portion of the tutorial is a simple one.\nWould you like to pass this tutorial?\nPress the 'y' key to say yes, or the 'n' key to say no.");
+            getUserInput();
+        } catch (Exception e) {
+            System.out.println("ERROR OCCURRED");
+        }
+        if (yesOrNo) {
+            try {
+                TimeUnit.SECONDS.sleep(2);
+                System.out.println("Okay, you're ready for this game!");
+                tutorialActive = false;
+                TimeUnit.SECONDS.sleep(2);
+            } catch (Exception e){
+                System.out.println("ERROR OCCURRED");
+            }
+        } else if (!yesOrNo) {
+            try {
+                System.out.println("Why not?");
+                TimeUnit.SECONDS.sleep(2);
+                System.out.println("Let's try this again.");
+                TimeUnit.SECONDS.sleep(2);
+                choiceTutorial();
+            } catch (Exception e) {
+                System.out.println("ERROR OCCURRED");
+            }
+        } else {
+            System.out.println("ERROR OCCURRED");
+        }
+        return;
+    }
+
     public static void storyPartOne() {
         while (true) {
             try {
@@ -233,8 +281,9 @@ public class Main {
             }
         }
     }
-    public static int setEnemyHp(){
-        int enemyType = randint.nextInt(3);
+
+    public static int setEnemyHp() {
+        enemyType = randint.nextInt(3);
         if (enemyType == 1) {
             enemyHp = 50;
         } else if (enemyType == 2) {
@@ -347,9 +396,15 @@ public class Main {
         System.out.println("死\nYOU ARE DEAD.");
     }
     public static void main(String[] args) {
-        runGame();
-    }
-}
+            runGame();
+        }
+            }
+
+
+
+
+
+
 
 
 
