@@ -3,7 +3,7 @@ package com.company;
 import java.util.*;
 import java.io.*;
 import java.util.concurrent.*;
-
+import java.time.temporal.*;
 public class Main {
 
 
@@ -15,7 +15,9 @@ public class Main {
     public static int playerDamageDealt;
     public static int baseDamage;
     public static int stunCooldown;
-    public static long previousStunTime;
+    public static int playerTurn;
+    public static int enemyTurn;
+    public static LocalDateTime previousStunTime = LocalDateTime.now();
     public static String enemyName;
     public static String enemyVariety;
     public static String weaponEquipped;
@@ -25,18 +27,20 @@ public class Main {
     public static String[] lowDiffEnemyList = {"wolf", "drunken man", "fox"};
     public static String[] mediumDiffEnemyList = {"gromp", "scuttle crab", "krug"};
     public static String[] hardDiffEnemyList = {"sentinel", "brambleback", "ironback turtle"};
+    public static ArrayList<Character> keyLog = new ArrayList<>();
     public static String[][] weaponList = {{"Pointy Stick", "Wooden Sword", "Iron Sword"},
             {"8", "12", "18"}
     };
     public static boolean playerAlive = true;
+    public static boolean enemyAlive;
     public static boolean lightAttack;
     public static boolean tutorialActive = true;
 
     public static void runGame() {
-        previousStunTime = 0;
         openingStory();
-        tutorialActive = false;
-        storyPartOne();
+        if (tutorialActive == false) {
+            storyPartOne();
+        }
 //        while (playerAlive) {
 //            getUserInput();
         if (playerHp < 1) {
@@ -56,7 +60,7 @@ public class Main {
     public static void declareStarterStats() {
         stunChance = 40;
         baseDamage = 8;
-        stunCooldown = 10000;
+        stunCooldown = 10;
     }
 
     public static void declareCurrentStats() {
@@ -86,20 +90,26 @@ public class Main {
             } catch (Exception e) {
                 System.out.println("ERROR OCCURRED");
             }
-            if (tutorialProgress ==3){
-                tutorialActive = false;
-                return;
+        }
+        if (tutorialProgress == 3) {
+            try {
+                TimeUnit.SECONDS.sleep(3);
+                System.out.println("Now, try going for a stun with the 'e' key!" +
+                        "\nYou currently have a 40% chance to successfully stun an enemy." +
+                        "\nThere is also a cooldown on your stun attacks, so you can only stun other turn!");
+                getUserInput();
+            } catch (Exception e) {
+                System.out.println("ERROR OCCURRED");
             }
         }
-    }
-
-    public static void currentWeaponEquipped() {
-
+        if (tutorialProgress == 4) {
+            choiceTutorial();
+        }
     }
 
     public static void lightAttack() {
         if (tutorialActive) {
-            tutorialProgress += 1;
+            tutorialProgress = tutorialProgress + 1;
         }
         try {
             lightAttack = true;
@@ -109,6 +119,7 @@ public class Main {
         } catch (Exception e) {
             System.out.println("ERROR OCCURRED");
         }
+        return;
     }
 
     public static void heavyAttack() {
@@ -120,50 +131,57 @@ public class Main {
             System.out.println("You charge up an attack.");
             TimeUnit.SECONDS.sleep(4);
             System.out.println(getPlayerDamageDealt() + " damage dealt!");
+            return;
         } catch (Exception e) {
             System.out.println("ERROR OCCURRED");
 
         }
+        return;
     }
 
     public static void stunAttack() {
         if (tutorialActive) {
-            tutorialProgress += tutorialProgress;
+            tutorialProgress = tutorialProgress + 1;
         }
-        checkStunCooldown();
+        if (!tutorialActive){
+            checkStunCooldown();
+        }
         if (!stunCooldownActive) {
             try {
                 System.out.println("You prepare to stun the " + getEnemyName() + ".");
-                int stunSuccess = randint.nextInt(100);
                 TimeUnit.SECONDS.sleep(2);
+                int stunSuccess = randint.nextInt(100);
                 if (stunSuccess < stunChance) {
                     enemyStunned = true;
                     System.out.println("Successful stun!");
-
-                } else if (stunSuccess > stunChance) {
+                } else if (stunSuccess == stunChance){
+                    enemyStunned = true;
+                    System.out.println("Successful stun!");
+                }else if (stunSuccess > stunChance) {
                     enemyStunned = false;
                     System.out.println("Stun failed!");
                 }
-            } catch (Exception e) {
-                System.out.println("ERROR OCCURRED");
             }
-        } else {
-            System.out.println("Stun cooldown is active!");
+                 catch(Exception e){
+                    System.out.println("ERROR OCCURRED");
+                }
+            } else{
+                System.out.println("Stun cooldown is active!");
+            }
         }
-    }
 
     public static void checkStunCooldown() {
-        long time = System.currentTimeMillis();
-        if (time > previousStunTime + stunCooldown) {
+        if (!keyLog.isEmpty()){
             stunCooldownActive = false;
-        } else {
+        } else if (keyLog.get(playerTurn - 1) == 'e'){
             stunCooldownActive = true;
+        } else {
+            stunCooldownActive = false;
         }
-        previousStunTime = time;
-        System.out.println(previousStunTime);
     }
     public static void getUserInput() {
         char keyPressed = scan.nextLine().charAt(0);
+        keyLog.add(keyPressed);
         switch (keyPressed) {
             case ('i'):
                 displayInventory();
@@ -176,6 +194,7 @@ public class Main {
                 break;
             case ('e'):
                 stunAttack();
+                break;
             default:
                 System.out.println("Invalid Input!!");
                 break;
@@ -189,6 +208,8 @@ public class Main {
                 System.out.println("You look around the surrounding area. A bush rustles...");
                 TimeUnit.SECONDS.sleep(1);
                 System.out.println("Suddenly, a " + getEnemyName() + " jumps out at you!");
+                TimeUnit.SECONDS.sleep(1);
+                fight();
                 break;
             } catch (Exception e) {
                 System.out.println("ERROR OCCURRED");
@@ -221,6 +242,9 @@ public class Main {
         } else {
             enemyHp = 150;
         }
+        if (tutorialActive) {
+            enemyHp = 999;
+        }
         return enemyType;
     }
 
@@ -231,20 +255,20 @@ public class Main {
             baseEnemyDamage = 4;
         } else if (enemyHp < 76 && enemyHp > 25) {
             baseEnemyDamage = 3;
+        } else if (enemyHp < 1){
+            enemyAlive = false;
+            baseEnemyDamage = 0;
         } else {
             baseEnemyDamage = 4;
         }
         int damageDealt = multiplier * baseEnemyDamage;
+        playerHp = playerHp - damageDealt;
         return damageDealt;
     }
 
-    public static int playerDamageTaken(int a) {
-        playerHp -= a;
-        return playerHp;
-    }
 
     public static int getPlayerDamageDealt() {
-        if (lightAttack == true) {
+        if (lightAttack) {
             playerDamageDealt = randint.nextInt(3) + baseDamage;
             return playerDamageDealt;
         } else if (!lightAttack) {
@@ -253,33 +277,75 @@ public class Main {
         } else {
             System.out.println("ERROR");
         }
+        getEnemyDamageTaken();
         return 0;
     }
 
+    public static void getEnemyDamageTaken() {
+        enemyHp = enemyHp - playerDamageDealt;
+    }
     public static String getEnemyName() {
-        if (enemyType == 1) {
-            String enemyName = lowDiffEnemyList[randint.nextInt(3)];
+        if (tutorialActive) {
+            enemyName = "tree";
+        } else {
+            if (enemyType == 1) {
+                enemyName = lowDiffEnemyList[randint.nextInt(3)];
+            } else if (enemyType == 2) {
+                enemyName = mediumDiffEnemyList[randint.nextInt(3)];
+            } else {
+                enemyName = hardDiffEnemyList[randint.nextInt(3)];
+            }
+            return enemyName;
+        } return enemyName;
+    }
+
+    public static void fightOrRun() {
+        getUserInput();
+        if (yesOrNo) {
+            System.out.println("You approach towards the " + enemyName + ".");
+            fightingPhase = true;
+            System.out.println("Use your first attack!");
+        } else if (!yesOrNo) {
+            System.out.println("You skedaddle the hell out of there.");
+            fightingPhase = false;
+            return;
         }
-        else if (enemyType == 2){
-            String enemyName = mediumDiffEnemyList[randint.nextInt(3)];
-        }
-        else{
-            String enemyName = hardDiffEnemyList[randint.nextInt(3)];
-        }
-        return enemyName;
     }
     public static void fight() {
-        System.out.println("You have run into a " + getEnemyName() + "!\nAre you going to fight it?");
+        enemyTurn = 0;
+        playerTurn = 0;
+        setEnemyHp();
+        System.out.println("You have run into a " + enemyName + "!\nAre you going to fight it?");
         if (fightAvoidable = true) {
             fightOrRun();
         } else if (fightAvoidable = false) {
             fightingPhase = true;
         }
+        keyLog.clear();
+        enemyStunned = false;
         while (fightingPhase) {
-
+            if (playerHp > 0) {
+                getUserInput();
+                System.out.println("The " + enemyName + " has " + enemyHp + " health remaining!");
+                playerTurn = playerTurn + 1;
+                if (!enemyStunned) {
+                    System.out.println("You have taken " + enemyDamage() + " damage!");
+                    System.out.println("You currently have " + playerHp + " health left.");
+                    enemyTurn = enemyTurn + 1;
+                } else if (enemyStunned) {
+                    System.out.println("The enemy is currently stunned, go for another attack while you can!");
+                    enemyTurn = enemyTurn + 1;
+                    enemyStunned = false;
+                }
+            } else {
+                endGame();
+                break;
+            }
         }
     }
-
+    public static void endGame(){
+        System.out.println("死\nYOU ARE DEAD.");
+    }
     public static void main(String[] args) {
         runGame();
     }
