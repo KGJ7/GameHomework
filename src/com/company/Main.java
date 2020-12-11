@@ -208,6 +208,7 @@ public class Main {
                 break;
             default:
                 System.out.println("Invalid Input!!");
+                getUserInput();
                 break;
         }
     }
@@ -391,9 +392,11 @@ public class Main {
     }
     public static void playerDeath(){
         System.out.println("死\nYOU ARE DEAD.");
+        return;
     }
     public static void enemyDeath(){
         System.out.println("You stand over the dead carcass of the " + enemyName + ", savouring your victory.");
+        return;
     }
     public static void main(String[] args) {
         runGame();
